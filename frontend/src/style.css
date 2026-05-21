@@ -5,3 +5,36 @@
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+.dark body,
+.dark {
+  color-scheme: dark;
+}
+
+/* AG Grid dark mode overrides */
+.dark .ag-theme-alpine {
+  --ag-background-color: #1f2937;
+  --ag-header-background-color: #111827;
+  --ag-odd-row-background-color: #1a2332;
+  --ag-row-hover-color: #374151;
+  --ag-border-color: #374151;
+  --ag-foreground-color: #e5e7eb;
+  --ag-header-foreground-color: #e5e7eb;
+  --ag-secondary-foreground-color: #9ca3af;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}

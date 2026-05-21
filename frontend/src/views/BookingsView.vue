@@ -1,122 +1,76 @@
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800">Bookings</h2>
-      <button @click="showModal = true" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-        + New Booking
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Bookings</h2>
+      <button @click="showModal = true" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        New Booking
       </button>
     </div>
 
-    <!-- Status Filter -->
-    <div class="flex gap-2 mb-6">
-      <button
-        v-for="s in ['ALL', 'RESERVED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']"
-        :key="s"
-        @click="filter = s"
-        :class="['px-4 py-2 rounded-lg text-sm font-medium transition',
-          filter === s ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']"
-      >{{ s }}</button>
-    </div>
-
-    <!-- Bookings Table -->
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-      <table class="w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Booking #</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Guest</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Room</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Check-in</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Check-out</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Amount</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y">
-          <tr v-for="b in filteredBookings" :key="b.id" class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm font-medium">{{ b.bookingNumber }}</td>
-            <td class="px-4 py-3 text-sm">{{ b.guestName }}</td>
-            <td class="px-4 py-3 text-sm">{{ b.roomNumber }} ({{ b.roomTypeName }})</td>
-            <td class="px-4 py-3 text-sm">{{ b.checkInDate }}</td>
-            <td class="px-4 py-3 text-sm">{{ b.checkOutDate }}</td>
-            <td class="px-4 py-3 text-sm font-medium">₹{{ b.totalAmount }}</td>
-            <td class="px-4 py-3">
-              <span :class="['px-2 py-1 rounded text-xs font-medium', bookingBadge(b.status)]">
-                {{ b.status }}
-              </span>
-            </td>
-            <td class="px-4 py-3">
-              <div class="flex gap-1">
-                <button
-                  v-if="b.status === 'RESERVED'"
-                  @click="handleCheckIn(b.id)"
-                  class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
-                >Check In</button>
-                <button
-                  v-if="b.status === 'CHECKED_IN'"
-                  @click="handleCheckOut(b.id)"
-                  class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
-                >Check Out</button>
-                <button
-                  v-if="b.status === 'RESERVED'"
-                  @click="handleCancel(b.id)"
-                  class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                >Cancel</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-if="filteredBookings.length === 0" class="text-center py-8 text-gray-400">
-        No bookings found
-      </div>
-    </div>
+    <!-- AG Grid with sorting, filtering, pagination, grouping -->
+    <DataGrid
+      :columnDefs="columnDefs"
+      :rowData="bookingStore.bookings"
+      gridHeight="600px"
+      :darkMode="isDark"
+    >
+      <template #toolbar>
+        <div class="flex gap-2">
+          <button
+            v-for="s in ['ALL', 'RESERVED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']"
+            :key="s"
+            @click="statusFilter = s"
+            :class="['px-3 py-1.5 rounded text-xs font-medium transition',
+              statusFilter === s ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300']"
+          >{{ s }}</button>
+        </div>
+      </template>
+    </DataGrid>
 
     <!-- New Booking Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h3 class="text-lg font-bold mb-4">New Booking</h3>
-        <form @submit.prevent="handleCreate" class="space-y-4">
+    <AppModal :show="showModal" title="New Booking" size="lg" @close="showModal = false">
+      <form @submit.prevent="handleCreate" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Guest</label>
+          <select v-model="newBooking.guestId" required class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 mt-1 dark:bg-gray-700 dark:text-white">
+            <option v-for="g in guests" :key="g.id" :value="g.id">{{ g.firstName }} {{ g.lastName }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Room</label>
+          <select v-model="newBooking.roomId" required class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 mt-1 dark:bg-gray-700 dark:text-white">
+            <option v-for="r in availableRooms" :key="r.id" :value="r.id">
+              {{ r.roomNumber }} - {{ r.roomTypeName }} (₹{{ r.basePrice }}/night)
+            </option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Guest</label>
-            <select v-model="newBooking.guestId" required class="w-full border rounded-lg px-3 py-2 mt-1">
-              <option v-for="g in guests" :key="g.id" :value="g.id">{{ g.firstName }} {{ g.lastName }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Room</label>
-            <select v-model="newBooking.roomId" required class="w-full border rounded-lg px-3 py-2 mt-1">
-              <option v-for="r in availableRooms" :key="r.id" :value="r.id">
-                {{ r.roomNumber }} - {{ r.roomTypeName }} (₹{{ r.basePrice }}/night)
-              </option>
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Check-in Date</label>
-              <input v-model="newBooking.checkInDate" type="date" required class="w-full border rounded-lg px-3 py-2 mt-1" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Check-out Date</label>
-              <input v-model="newBooking.checkOutDate" type="date" required class="w-full border rounded-lg px-3 py-2 mt-1" />
-            </div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Check-in Date</label>
+            <input v-model="newBooking.checkInDate" type="date" required class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 mt-1 dark:bg-gray-700 dark:text-white" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Number of Guests</label>
-            <input v-model.number="newBooking.numGuests" type="number" min="1" class="w-full border rounded-lg px-3 py-2 mt-1" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Check-out Date</label>
+            <input v-model="newBooking.checkOutDate" type="date" required class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 mt-1 dark:bg-gray-700 dark:text-white" />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Special Requests</label>
-            <textarea v-model="newBooking.specialRequests" rows="2" class="w-full border rounded-lg px-3 py-2 mt-1"></textarea>
-          </div>
-          <div class="flex gap-3 justify-end">
-            <button type="button" @click="showModal = false" class="px-4 py-2 text-gray-600">Cancel</button>
-            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Create Booking</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Number of Guests</label>
+          <input v-model.number="newBooking.numGuests" type="number" min="1" class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 mt-1 dark:bg-gray-700 dark:text-white" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Special Requests</label>
+          <textarea v-model="newBooking.specialRequests" rows="2" class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 mt-1 dark:bg-gray-700 dark:text-white"></textarea>
+        </div>
+      </form>
+      <template #footer>
+        <button @click="showModal = false" class="px-4 py-2 text-gray-600 dark:text-gray-300">Cancel</button>
+        <button @click="handleCreate" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Create Booking</button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -124,11 +78,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useBookingStore } from '../stores/bookings'
 import { useRoomStore } from '../stores/rooms'
+import { useDarkMode } from '../composables/useDarkMode'
+import { useToast } from 'vue-toastification'
+import DataGrid from '../components/DataGrid.vue'
+import AppModal from '../components/AppModal.vue'
 import api from '../api'
 
 const bookingStore = useBookingStore()
 const roomStore = useRoomStore()
-const filter = ref('ALL')
+const toast = useToast()
+const { isDark } = useDarkMode()
+const statusFilter = ref('ALL')
 const showModal = ref(false)
 const guests = ref([])
 
@@ -141,31 +101,84 @@ const newBooking = ref({
   specialRequests: '',
 })
 
+const columnDefs = [
+  { headerName: 'Booking #', field: 'bookingNumber', width: 150 },
+  { headerName: 'Guest', field: 'guestName', width: 160 },
+  { headerName: 'Room', field: 'roomNumber', width: 100 },
+  { headerName: 'Type', field: 'roomTypeName', width: 120 },
+  { headerName: 'Check-in', field: 'checkInDate', width: 120 },
+  { headerName: 'Check-out', field: 'checkOutDate', width: 120 },
+  { headerName: 'Amount', field: 'totalAmount', width: 120, valueFormatter: (p) => `₹${p.value}` },
+  {
+    headerName: 'Status', field: 'status', width: 130,
+    cellRenderer: (params) => {
+      const colors = { RESERVED: '#3b82f6', CHECKED_IN: '#10b981', CHECKED_OUT: '#6b7280', CANCELLED: '#ef4444' }
+      const color = colors[params.value] || '#6b7280'
+      return `<span style="color:${color};font-weight:600">${params.value}</span>`
+    },
+  },
+  {
+    headerName: 'Actions', width: 220, sortable: false, filter: false,
+    cellRenderer: (params) => {
+      const btns = []
+      if (params.data.status === 'RESERVED') {
+        btns.push(`<button onclick="window.__pmsCheckIn(${params.data.id})" style="background:#10b981;color:white;padding:2px 8px;border-radius:4px;font-size:12px;margin-right:4px">Check In</button>`)
+        btns.push(`<button onclick="window.__pmsCancel(${params.data.id})" style="background:#ef4444;color:white;padding:2px 8px;border-radius:4px;font-size:12px">Cancel</button>`)
+      }
+      if (params.data.status === 'CHECKED_IN') {
+        btns.push(`<button onclick="window.__pmsCheckOut(${params.data.id})" style="background:#3b82f6;color:white;padding:2px 8px;border-radius:4px;font-size:12px;margin-right:4px">Check Out</button>`)
+        btns.push(`<button onclick="window.__pmsInvoice(${params.data.id})" style="background:#8b5cf6;color:white;padding:2px 8px;border-radius:4px;font-size:12px">Invoice</button>`)
+      }
+      return btns.join('')
+    },
+  },
+]
+
 onMounted(async () => {
   bookingStore.fetchBookings()
   roomStore.fetchRooms()
   const res = await api.get('/guests')
   guests.value = res.data
+
+  window.__pmsCheckIn = async (id) => {
+    try {
+      await bookingStore.checkIn(id)
+      roomStore.fetchRooms()
+      toast.success('Checked in successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Check-in failed')
+    }
+  }
+  window.__pmsCheckOut = async (id) => {
+    try {
+      await bookingStore.checkOut(id)
+      roomStore.fetchRooms()
+      toast.success('Checked out successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Check-out failed')
+    }
+  }
+  window.__pmsCancel = async (id) => {
+    try {
+      await bookingStore.cancelBooking(id)
+      toast.success('Booking cancelled')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Cancel failed')
+    }
+  }
+  window.__pmsInvoice = async (id) => {
+    try {
+      await api.post(`/billing/invoices/generate/${id}`)
+      toast.success('Invoice generated')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Invoice generation failed')
+    }
+  }
 })
 
 const availableRooms = computed(() =>
   roomStore.rooms.filter((r) => r.status === 'AVAILABLE')
 )
-
-const filteredBookings = computed(() => {
-  if (filter.value === 'ALL') return bookingStore.bookings
-  return bookingStore.bookings.filter((b) => b.status === filter.value)
-})
-
-function bookingBadge(status) {
-  const badges = {
-    RESERVED: 'bg-blue-100 text-blue-700',
-    CHECKED_IN: 'bg-green-100 text-green-700',
-    CHECKED_OUT: 'bg-gray-100 text-gray-700',
-    CANCELLED: 'bg-red-100 text-red-700',
-  }
-  return badges[status] || 'bg-gray-100'
-}
 
 async function handleCreate() {
   try {
@@ -173,36 +186,9 @@ async function handleCreate() {
     showModal.value = false
     newBooking.value = { guestId: null, roomId: null, checkInDate: '', checkOutDate: '', numGuests: 1, specialRequests: '' }
     roomStore.fetchRooms()
+    toast.success('Booking created successfully')
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to create booking')
-  }
-}
-
-async function handleCheckIn(id) {
-  try {
-    await bookingStore.checkIn(id)
-    roomStore.fetchRooms()
-  } catch (err) {
-    alert(err.response?.data?.message || 'Check-in failed')
-  }
-}
-
-async function handleCheckOut(id) {
-  try {
-    await bookingStore.checkOut(id)
-    roomStore.fetchRooms()
-  } catch (err) {
-    alert(err.response?.data?.message || 'Check-out failed')
-  }
-}
-
-async function handleCancel(id) {
-  if (confirm('Cancel this booking?')) {
-    try {
-      await bookingStore.cancelBooking(id)
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to cancel')
-    }
+    toast.error(err.response?.data?.message || 'Failed to create booking')
   }
 }
 </script>
