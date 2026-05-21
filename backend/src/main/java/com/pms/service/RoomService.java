@@ -105,6 +105,15 @@ public class RoomService {
         dto.setBasePrice(room.getRoomType().getBasePrice());
         dto.setFloor(room.getFloor());
         dto.setStatus(room.getStatus());
+        dto.setCapacity(room.getCapacity());
+        dto.setOccupiedCount(room.getOccupiedCount());
+        dto.setWardName(room.getWardName());
+        dto.setUnitLabel(room.getUnitLabel());
+        if (room.getProperty() != null) {
+            dto.setPropertyId(room.getProperty().getId());
+            dto.setPropertyName(room.getProperty().getName());
+            dto.setPropertyType(room.getProperty().getPropertyType().name());
+        }
         return dto;
     }
 }

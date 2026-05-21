@@ -72,4 +72,12 @@ public class BookingController {
     public ResponseEntity<BookingDTO> cancelBooking(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
     }
+
+    @PostMapping("/{id}/transition")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FRONT_DESK')")
+    public ResponseEntity<BookingDTO> transitionStatus(
+            @PathVariable Long id,
+            @RequestParam String targetStatus) {
+        return ResponseEntity.ok(bookingService.transitionStatus(id, targetStatus));
+    }
 }

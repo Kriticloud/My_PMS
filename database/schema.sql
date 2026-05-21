@@ -18,6 +18,23 @@ DROP TABLE IF EXISTS room CASCADE;
 DROP TABLE IF EXISTS room_type CASCADE;
 DROP TABLE IF EXISTS app_user CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
+DROP TABLE IF EXISTS property CASCADE;
+
+-- =====================================================
+-- 0. PROPERTY (multi-property support)
+-- =====================================================
+CREATE TABLE property (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    property_type VARCHAR(20) NOT NULL
+        CHECK (property_type IN ('HOTEL', 'HOSTEL', 'HOSPITAL', 'RENTAL', 'RESORT')),
+    address TEXT,
+    contact_phone VARCHAR(20),
+    contact_email VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- =====================================================
 -- 1. ROLES & USERS (RBAC)
@@ -57,9 +74,14 @@ CREATE TABLE room (
     id BIGSERIAL PRIMARY KEY,
     room_number VARCHAR(10) NOT NULL UNIQUE,
     room_type_id BIGINT NOT NULL REFERENCES room_type(id),
+    property_id BIGINT REFERENCES property(id),
     floor INT NOT NULL DEFAULT 1,
+    capacity INT NOT NULL DEFAULT 1,
+    occupied_count INT NOT NULL DEFAULT 0,
+    ward_name VARCHAR(50),
+    unit_label VARCHAR(50),
     status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE'
-        CHECK (status IN ('AVAILABLE', 'OCCUPIED', 'CLEANING', 'MAINTENANCE')),
+        CHECK (status IN ('AVAILABLE', 'OCCUPIED', 'CLEANING', 'SANITIZING', 'MAINTENANCE')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
