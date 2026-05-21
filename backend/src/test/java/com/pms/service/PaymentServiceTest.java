@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -131,11 +132,13 @@ class PaymentServiceTest {
         dto2.setPaymentMode("CARD");
 
         when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
-        when(paymentRepository.findByInvoiceId(1L)).thenReturn(Collections.emptyList());
+        List<Payment> savedPayments = new ArrayList<>();
+        when(paymentRepository.findByInvoiceId(1L)).thenAnswer(inv -> new ArrayList<>(savedPayments));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
-            p.setId(1L);
+            p.setId((long) (savedPayments.size() + 1));
             p.setPaidAt(LocalDateTime.now());
+            savedPayments.add(p);
             return p;
         });
 

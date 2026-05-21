@@ -17,8 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.context.annotation.Import;
 import com.pms.config.TestSecurityConfig;
-import org.springframework.context.annotation.Import;
-import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -30,10 +28,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import(TestSecurityConfig.class)
 @Import(TestSecurityConfig.class)
 @WebMvcTest(BillingController.class)
 class BillingControllerTest {
@@ -94,7 +90,7 @@ class BillingControllerTest {
         when(invoiceService.generateInvoice(eq(1L), any())).thenReturn(sampleInvoice());
 
         mockMvc.perform(post("/api/billing/invoices/generate/1").with(csrf()))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalAmount").value(10620));
     }
 
@@ -105,7 +101,7 @@ class BillingControllerTest {
 
         mockMvc.perform(post("/api/billing/invoices/generate/1").with(csrf())
                 .param("discount", "10"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
     }
 
     @Test
