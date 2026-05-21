@@ -98,7 +98,9 @@ const guests = ref([])
 const statusFilters = computed(() => {
   const prop = propertyStore.activeProperty
   if (prop && prop.validStatuses) {
-    return ['ALL', ...prop.validStatuses, 'CANCELLED']
+    const statuses = ['ALL', ...prop.validStatuses]
+    if (!prop.validStatuses.includes('CANCELLED')) statuses.push('CANCELLED')
+    return statuses
   }
   return ['ALL', 'RESERVED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']
 })
@@ -128,7 +130,7 @@ const columnDefs = [
   {
     headerName: 'Status', field: 'status', width: 130,
     cellRenderer: (params) => {
-      const colors = { RESERVED: '#3b82f6', CHECKED_IN: '#10b981', CHECKED_OUT: '#6b7280', CANCELLED: '#ef4444' }
+      const colors = { RESERVED: '#3b82f6', BOOKED: '#3b82f6', CHECKED_IN: '#10b981', CHECKED_OUT: '#6b7280', CANCELLED: '#ef4444' }
       const color = colors[params.value] || '#6b7280'
       return `<span style="color:${color};font-weight:600">${params.value}</span>`
     },
@@ -137,7 +139,7 @@ const columnDefs = [
     headerName: 'Actions', width: 220, sortable: false, filter: false,
     cellRenderer: (params) => {
       const btns = []
-      if (params.data.status === 'RESERVED') {
+      if (params.data.status === 'RESERVED' || params.data.status === 'BOOKED') {
         btns.push(`<button onclick="window.__pmsCheckIn(${params.data.id})" style="background:#10b981;color:white;padding:2px 8px;border-radius:4px;font-size:12px;margin-right:4px">Check In</button>`)
         btns.push(`<button onclick="window.__pmsCancel(${params.data.id})" style="background:#ef4444;color:white;padding:2px 8px;border-radius:4px;font-size:12px">Cancel</button>`)
       }

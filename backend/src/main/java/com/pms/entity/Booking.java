@@ -54,7 +54,7 @@ public class Booking {
     private Integer numGuests = 1;
 
     @Column(nullable = false, length = 20)
-    private String status = "RESERVED";
+    private String status = "BOOKED";
 
     @Column(name = "special_requests", columnDefinition = "TEXT")
     private String specialRequests;

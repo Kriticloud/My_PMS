@@ -20,7 +20,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Check for overlapping bookings on a room
     @Query("SELECT b FROM Booking b WHERE b.room.id = :roomId " +
-            "AND b.status NOT IN ('CANCELLED', 'CHECKED_OUT') " +
+            "AND b.status NOT IN ('CANCELLED', 'CHECKED_OUT', 'VACATED', 'DISCHARGED', 'TERMINATED') " +
             "AND b.checkInDate < :checkOut AND b.checkOutDate > :checkIn")
     List<Booking> findOverlappingBookings(
             @Param("roomId") Long roomId,
@@ -32,7 +32,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findActiveBookingByRoomNumber(@Param("roomNumber") String roomNumber);
 
     // Today's check-ins
-    @Query("SELECT b FROM Booking b WHERE b.checkInDate = :date AND b.status = 'RESERVED'")
+    @Query("SELECT b FROM Booking b WHERE b.checkInDate = :date AND b.status IN ('RESERVED', 'BOOKED')")
     List<Booking> findTodaysCheckIns(@Param("date") LocalDate date);
 
     // Today's check-outs

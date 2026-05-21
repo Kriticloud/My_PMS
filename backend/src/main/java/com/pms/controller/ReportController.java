@@ -23,7 +23,7 @@ public class ReportController {
     }
 
     @GetMapping("/revenue")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FRONT_DESK', 'RESTAURANT_STAFF')")
     public ResponseEntity<List<Map<String, Object>>> getDailyRevenue(
             @RequestParam(defaultValue = "7") int days) {
         return ResponseEntity.ok(reportService.getDailyRevenueReport(days));
@@ -37,13 +37,13 @@ public class ReportController {
     }
 
     @GetMapping("/occupancy")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FRONT_DESK', 'RESTAURANT_STAFF')")
     public ResponseEntity<Map<String, Object>> getOccupancyReport() {
         return ResponseEntity.ok(reportService.getOccupancyReport());
     }
 
     @GetMapping("/pos-sales")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FRONT_DESK', 'RESTAURANT_STAFF')")
     public ResponseEntity<List<Map<String, Object>>> getPosSalesReport(
             @RequestParam(defaultValue = "7") int days) {
         return ResponseEntity.ok(reportService.getPosSalesReport(days));

@@ -130,18 +130,18 @@ onMounted(async () => {
 
 async function loadDashboard() {
   try {
-    const [dashRes, revRes, posRes, occRes] = await Promise.all([
+    const [dashRes, revRes, posRes, occRes] = await Promise.allSettled([
       api.get('/reports/dashboard'),
       api.get('/reports/revenue?days=7'),
       api.get('/reports/pos-sales?days=7'),
       api.get('/reports/occupancy'),
     ])
 
-    stats.value = dashRes.data
+    if (dashRes.status === 'fulfilled') stats.value = dashRes.value.data
     lastUpdate.value = new Date().toLocaleTimeString()
 
     // Revenue Line Chart
-    const revData = revRes.data
+    const revData = revRes.status === 'fulfilled' ? revRes.value.data : []
     revenueChartData.value = {
       labels: revData.map((d) => d.date),
       datasets: [
@@ -165,7 +165,7 @@ async function loadDashboard() {
     }
 
     // POS Sales Bar Chart
-    const posData = posRes.data
+    const posData = posRes.status === 'fulfilled' ? posRes.value.data : []
     posSalesChartData.value = {
       labels: posData.map((d) => d.date),
       datasets: [
@@ -185,7 +185,7 @@ async function loadDashboard() {
     }
 
     // Occupancy Doughnut
-    const occ = occRes.data
+    const occ = occRes.status === 'fulfilled' ? occRes.value.data : {}
     occupancyChartData.value = {
       labels: Object.keys(occ.statusBreakdown || {}),
       datasets: [{

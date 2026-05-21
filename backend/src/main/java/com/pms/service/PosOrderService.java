@@ -134,7 +134,7 @@ public class PosOrderService {
         dto.setOrderType(o.getOrderType());
         dto.setStatus(o.getStatus());
         dto.setTotalAmount(o.getTotalAmount());
-        dto.setCreatedAt(o.getCreatedAt().toString());
+        dto.setCreatedAt(o.getCreatedAt() != null ? o.getCreatedAt().toString() : null);
         dto.setItems(o.getItems().stream().map(this::toItemDTO).collect(Collectors.toList()));
         return dto;
     }

@@ -10,9 +10,9 @@ INSERT INTO role (name, description) VALUES
 
 -- 2. Default Admin User (password: admin123 - BCrypt encoded)
 INSERT INTO app_user (username, password, full_name, email, role_id) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'System Admin', 'admin@pms.com', 1),
-('frontdesk1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'John Doe', 'john@pms.com', 2),
-('waiter1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Jane Smith', 'jane@pms.com', 3);
+('admin', '$2a$10$ldFIRQozTqU/YUpeJiqG0eDEwx4IynJWjJ1HazIH0EbwBq.pMzDa6', 'System Admin', 'admin@pms.com', 1),
+('frontdesk1', '$2a$10$ldFIRQozTqU/YUpeJiqG0eDEwx4IynJWjJ1HazIH0EbwBq.pMzDa6', 'John Doe', 'john@pms.com', 2),
+('waiter1', '$2a$10$ldFIRQozTqU/YUpeJiqG0eDEwx4IynJWjJ1HazIH0EbwBq.pMzDa6', 'Jane Smith', 'jane@pms.com', 3);
 
 -- 3. Properties
 INSERT INTO property (name, property_type, address, contact_phone, contact_email) VALUES
