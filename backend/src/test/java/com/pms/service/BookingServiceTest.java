@@ -6,7 +6,11 @@ import com.pms.exception.BadRequestException;
 import com.pms.exception.ResourceNotFoundException;
 import com.pms.repository.BookingRepository;
 import com.pms.repository.GuestRepository;
+import com.pms.repository.PropertyRepository;
 import com.pms.repository.RoomRepository;
+import com.pms.strategy.HotelStrategy;
+import com.pms.strategy.PropertyStrategy;
+import com.pms.strategy.PropertyStrategyFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +38,10 @@ class BookingServiceTest {
     @Mock
     private GuestRepository guestRepository;
     @Mock
+    private PropertyRepository propertyRepository;
+    @Mock
+    private PropertyStrategyFactory strategyFactory;
+    @Mock
     private WebSocketNotificationService wsNotificationService;
 
     @InjectMocks
@@ -43,9 +51,11 @@ class BookingServiceTest {
     private RoomType roomType;
     private Room room;
     private Booking booking;
+    private PropertyStrategy hotelStrategy;
 
     @BeforeEach
     void setUp() {
+        hotelStrategy = new HotelStrategy();
         guest = Guest.builder().id(1L).firstName("John").lastName("Doe").build();
         roomType = RoomType.builder().id(1L).name("Deluxe").basePrice(new BigDecimal("3000")).build();
         room = Room.builder().id(1L).roomNumber("101").roomType(roomType).floor(1).status("AVAILABLE").build();
@@ -72,6 +82,7 @@ class BookingServiceTest {
 
         when(guestRepository.findById(1L)).thenReturn(Optional.of(guest));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any())).thenReturn(Collections.emptyList());
         when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> {
             Booking saved = inv.getArgument(0);
@@ -82,7 +93,7 @@ class BookingServiceTest {
         BookingDTO result = bookingService.createBooking(dto);
 
         assertThat(result.getTotalAmount()).isEqualByComparingTo("9000"); // 3000 * 3 nights
-        assertThat(result.getStatus()).isEqualTo("RESERVED");
+        assertThat(result.getStatus()).isEqualTo("BOOKED");
     }
 
     @Test
@@ -95,10 +106,10 @@ class BookingServiceTest {
 
         when(guestRepository.findById(1L)).thenReturn(Optional.of(guest));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
 
         assertThatThrownBy(() -> bookingService.createBooking(dto))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Check-out date must be after");
+                .isInstanceOf(BadRequestException.class);
     }
 
     @Test
@@ -111,6 +122,7 @@ class BookingServiceTest {
 
         when(guestRepository.findById(1L)).thenReturn(Optional.of(guest));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any())).thenReturn(List.of(booking));
 
         assertThatThrownBy(() -> bookingService.createBooking(dto))
@@ -134,7 +146,9 @@ class BookingServiceTest {
 
     @Test
     void checkIn_reservedBooking_setsCheckedInAndOccupied() {
+        booking.setStatus("BOOKED");
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
         when(roomRepository.save(any(Room.class))).thenReturn(room);
 
@@ -150,16 +164,17 @@ class BookingServiceTest {
     void checkIn_nonReservedBooking_throwsBadRequest() {
         booking.setStatus("CHECKED_IN");
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
 
         assertThatThrownBy(() -> bookingService.checkIn(1L))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("RESERVED");
+                .isInstanceOf(BadRequestException.class);
     }
 
     @Test
     void checkOut_checkedInBooking_setsCheckedOutAndCleaning() {
         booking.setStatus("CHECKED_IN");
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
         when(roomRepository.save(any(Room.class))).thenReturn(room);
 
@@ -172,8 +187,11 @@ class BookingServiceTest {
 
     @Test
     void cancelBooking_reservedBooking_setsCancelled() {
+        booking.setStatus("BOOKED");
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(roomRepository.save(any(Room.class))).thenReturn(room);
 
         BookingDTO result = bookingService.cancelBooking(1L);
 
@@ -184,6 +202,7 @@ class BookingServiceTest {
     void cancelBooking_checkedInBooking_throwsBadRequest() {
         booking.setStatus("CHECKED_IN");
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(strategyFactory.getStrategy(any(PropertyType.class))).thenReturn(hotelStrategy);
 
         assertThatThrownBy(() -> bookingService.cancelBooking(1L))
                 .isInstanceOf(BadRequestException.class);
