@@ -63,8 +63,9 @@ public class InvoiceService {
         // Room charges
         InvoiceItem roomCharge = InvoiceItem.builder()
                 .invoice(invoice)
-                .description("Room " + booking.getRoom().getRoomNumber() + " - " + booking.getRoom().getRoomType().getName())
-                .itemType("ROOM")
+                .description(
+                        "Room " + booking.getRoom().getRoomNumber() + " - " + booking.getRoom().getRoomType().getName())
+                .itemType("ROOM_CHARGE")
                 .amount(booking.getTotalAmount())
                 .referenceId(booking.getId())
                 .build();
@@ -78,7 +79,7 @@ public class InvoiceService {
                 InvoiceItem posCharge = InvoiceItem.builder()
                         .invoice(invoice)
                         .description("POS Order " + posOrder.getOrderNumber() + " (" + posOrder.getOrderType() + ")")
-                        .itemType("POS")
+                        .itemType("POS_CHARGE")
                         .amount(posOrder.getTotalAmount())
                         .referenceId(posOrder.getId())
                         .build();
@@ -89,7 +90,8 @@ public class InvoiceService {
 
         // Apply discount
         if (discountPercent != null && discountPercent.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal discountAmount = subtotal.multiply(discountPercent).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal discountAmount = subtotal.multiply(discountPercent).divide(BigDecimal.valueOf(100), 2,
+                    RoundingMode.HALF_UP);
             InvoiceItem discountItem = InvoiceItem.builder()
                     .invoice(invoice)
                     .description("Discount (" + discountPercent + "%)")

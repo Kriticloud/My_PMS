@@ -8,6 +8,8 @@ import com.pms.exception.ResourceNotFoundException;
 import com.pms.repository.RoomRepository;
 import com.pms.repository.RoomTypeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -84,6 +86,7 @@ public class RoomService {
         return toDTO(roomRepository.save(room));
     }
 
+    @Cacheable("roomTypes")
     public List<RoomType> getAllRoomTypes() {
         return roomTypeRepository.findAll();
     }

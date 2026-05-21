@@ -2,6 +2,8 @@ package com.pms.controller;
 
 import com.pms.dto.LoginRequest;
 import com.pms.dto.LoginResponse;
+import com.pms.entity.AppUser;
+import com.pms.repository.UserRepository;
 import com.pms.security.JwtTokenProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +21,12 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         String token = jwtTokenProvider.generateToken(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -33,10 +35,14 @@ public class AuthController {
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .orElse("");
 
+        String fullName = userRepository.findByUsername(userDetails.getUsername())
+                .map(AppUser::getFullName)
+                .orElse(userDetails.getUsername());
+
         LoginResponse response = LoginResponse.builder()
                 .token(token)
                 .username(userDetails.getUsername())
-                .fullName(userDetails.getUsername())
+                .fullName(fullName)
                 .role(role)
                 .build();
 

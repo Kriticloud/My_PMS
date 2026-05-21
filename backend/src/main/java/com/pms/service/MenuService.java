@@ -9,6 +9,8 @@ import com.pms.repository.InventoryRepository;
 import com.pms.repository.MenuCategoryRepository;
 import com.pms.repository.MenuItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,12 @@ public class MenuService {
     private final MenuCategoryRepository menuCategoryRepository;
     private final InventoryRepository inventoryRepository;
 
+    @Cacheable("menuCategories")
     public List<MenuCategory> getAllCategories() {
         return menuCategoryRepository.findAll();
     }
 
+    @Cacheable("menuItems")
     public List<MenuItemDTO> getAllMenuItems() {
         return menuItemRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
@@ -40,6 +44,7 @@ public class MenuService {
     }
 
     @Transactional
+    @CacheEvict(value = "menuItems", allEntries = true)
     public MenuItemDTO createMenuItem(MenuItemDTO dto) {
         MenuCategory category = menuCategoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -65,6 +70,7 @@ public class MenuService {
     }
 
     @Transactional
+    @CacheEvict(value = "menuItems", allEntries = true)
     public MenuItemDTO updateMenuItem(Long id, MenuItemDTO dto) {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found"));

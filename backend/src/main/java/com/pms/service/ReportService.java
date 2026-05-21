@@ -2,6 +2,7 @@ package com.pms.service;
 
 import com.pms.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ public class ReportService {
     private final PosOrderRepository posOrderRepository;
     private final InvoiceRepository invoiceRepository;
 
+    @Cacheable("dashboardStats")
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new LinkedHashMap<>();
 
@@ -43,6 +45,21 @@ public class ReportService {
         return stats;
     }
 
+    public Map<String, Object> getRevenueSummary(int days) {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        LocalDateTime start = LocalDate.now().minusDays(days).atStartOfDay();
+        LocalDateTime end = LocalDate.now().plusDays(1).atStartOfDay();
+
+        BigDecimal invoiceRevenue = invoiceRepository.getDailyRevenue(start, end);
+        BigDecimal posRevenue = posOrderRepository.getDailyRevenue(start, end);
+
+        summary.put("invoiceRevenue", invoiceRevenue);
+        summary.put("posRevenue", posRevenue);
+        summary.put("totalRevenue", invoiceRevenue.add(posRevenue));
+        summary.put("dailyBreakdown", getDailyRevenueReport(days));
+        return summary;
+    }
+
     public List<Map<String, Object>> getDailyRevenueReport(int days) {
         List<Map<String, Object>> report = new ArrayList<>();
         for (int i = days - 1; i >= 0; i--) {
@@ -66,18 +83,40 @@ public class ReportService {
     public Map<String, Object> getOccupancyReport() {
         Map<String, Object> report = new LinkedHashMap<>();
         long totalRooms = roomRepository.count();
-        long occupied = bookingRepository.countCheckedIn();
-        report.put("totalRooms", totalRooms);
-        report.put("occupied", occupied);
-        report.put("available", totalRooms - occupied);
-        report.put("occupancyRate", totalRooms > 0 ? Math.round((double) occupied / totalRooms * 100) : 0);
 
-        // Breakdown by status
+        // Count by status
         Map<String, Long> statusBreakdown = new LinkedHashMap<>();
         roomRepository.findAll().forEach(room -> statusBreakdown.merge(room.getStatus(), 1L, Long::sum));
+
+        long occupied = statusBreakdown.getOrDefault("OCCUPIED", 0L);
+        long available = statusBreakdown.getOrDefault("AVAILABLE", 0L);
+        long cleaning = statusBreakdown.getOrDefault("CLEANING", 0L);
+        long maintenance = statusBreakdown.getOrDefault("MAINTENANCE", 0L);
+
+        report.put("totalRooms", totalRooms);
+        report.put("occupiedRooms", occupied);
+        report.put("availableRooms", available);
+        report.put("cleaningRooms", cleaning);
+        report.put("maintenanceRooms", maintenance);
+        report.put("occupancyRate", totalRooms > 0 ? Math.round((double) occupied / totalRooms * 100) : 0);
         report.put("statusBreakdown", statusBreakdown);
 
         return report;
+    }
+
+    public Map<String, Object> getPosSalesSummary(int days) {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        LocalDateTime start = LocalDate.now().minusDays(days).atStartOfDay();
+        LocalDateTime end = LocalDate.now().plusDays(1).atStartOfDay();
+
+        List<com.pms.entity.PosOrder> orders = posOrderRepository.findOrdersBetween(start, end);
+        long totalOrders = orders.stream().filter(o -> !"CANCELLED".equals(o.getStatus())).count();
+        BigDecimal revenue = posOrderRepository.getDailyRevenue(start, end);
+
+        summary.put("totalOrders", totalOrders);
+        summary.put("revenue", revenue);
+        summary.put("dailyBreakdown", getPosSalesReport(days));
+        return summary;
     }
 
     public List<Map<String, Object>> getPosSalesReport(int days) {

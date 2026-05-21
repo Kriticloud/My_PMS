@@ -13,7 +13,7 @@
     <!-- AG Grid with sorting, filtering, pagination, grouping -->
     <DataGrid
       :columnDefs="columnDefs"
-      :rowData="bookingStore.bookings"
+      :rowData="filteredBookings"
       gridHeight="600px"
       :darkMode="isDark"
     >
@@ -91,6 +91,11 @@ const { isDark } = useDarkMode()
 const statusFilter = ref('ALL')
 const showModal = ref(false)
 const guests = ref([])
+
+const filteredBookings = computed(() => {
+  if (statusFilter.value === 'ALL') return bookingStore.bookings
+  return bookingStore.bookings.filter(b => b.status === statusFilter.value)
+})
 
 const newBooking = ref({
   guestId: null,

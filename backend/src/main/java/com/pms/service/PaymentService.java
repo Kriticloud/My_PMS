@@ -58,7 +58,7 @@ public class PaymentService {
         if (newTotalPaid.compareTo(invoice.getTotalAmount()) >= 0) {
             invoice.setStatus("PAID");
         } else {
-            invoice.setStatus("PARTIAL");
+            invoice.setStatus("PARTIALLY_PAID");
         }
         invoiceRepository.save(invoice);
 

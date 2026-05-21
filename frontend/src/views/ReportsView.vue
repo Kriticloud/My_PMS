@@ -175,7 +175,8 @@ const revenueChartData = computed(() => {
   return {
     labels: dailyRevenue.value.map(d => d.date),
     datasets: [
-      { label: 'Revenue', data: dailyRevenue.value.map(d => d.amount), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4 },
+      { label: 'Invoice Revenue', data: dailyRevenue.value.map(d => Number(d.invoiceRevenue)), borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.1)', fill: true, tension: 0.4 },
+      { label: 'POS Revenue', data: dailyRevenue.value.map(d => Number(d.posRevenue)), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 },
     ]
   }
 })
@@ -185,7 +186,8 @@ const posSalesChartData = computed(() => {
   return {
     labels: dailyPosSales.value.map(d => d.date),
     datasets: [
-      { label: 'POS Sales', data: dailyPosSales.value.map(d => d.amount), backgroundColor: '#8b5cf6' },
+      { label: 'Orders', data: dailyPosSales.value.map(d => d.totalOrders), backgroundColor: '#8b5cf6', borderRadius: 6 },
+      { label: 'Revenue (₹)', data: dailyPosSales.value.map(d => Number(d.totalRevenue)), backgroundColor: '#06b6d4', borderRadius: 6 },
     ]
   }
 })
@@ -212,19 +214,16 @@ async function loadReport(type) {
       const res = await api.get('/reports/occupancy')
       occupancy.value = res.data
     } else if (type === 'revenue') {
-      const [summary, daily] = await Promise.all([
-        api.get('/reports/revenue'),
+      const [summaryRes, dailyRes] = await Promise.all([
+        api.get(`/reports/revenue/summary?days=${revenueDays.value}`),
         api.get(`/reports/revenue?days=${revenueDays.value}`)
       ])
-      revenue.value = summary.data
-      dailyRevenue.value = daily.data.dailyBreakdown || []
+      revenue.value = summaryRes.data
+      dailyRevenue.value = dailyRes.data || []
     } else if (type === 'pos-sales') {
-      const [summary, daily] = await Promise.all([
-        api.get('/reports/pos-sales'),
-        api.get('/reports/pos-sales?days=7')
-      ])
-      posSales.value = summary.data
-      dailyPosSales.value = daily.data.dailyBreakdown || []
+      const summaryRes = await api.get('/reports/pos-sales/summary?days=7')
+      posSales.value = summaryRes.data
+      dailyPosSales.value = summaryRes.data.dailyBreakdown || []
     }
   } catch (err) {
     console.error('Failed to load report:', err)

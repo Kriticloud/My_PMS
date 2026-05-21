@@ -32,12 +32,12 @@ export const useBillingStore = defineStore('billing', {
       window.URL.revokeObjectURL(url)
     },
     async processPayment(invoiceId, payment) {
-      const res = await api.post(`/billing/invoices/${invoiceId}/payments`, payment)
+      const res = await api.post('/billing/payments', { ...payment, invoiceId })
       await this.fetchInvoices()
       return res.data
     },
     async splitPayment(invoiceId, payments) {
-      const res = await api.post(`/billing/invoices/${invoiceId}/split-payment`, payments)
+      const res = await api.post('/billing/payments/split', payments)
       await this.fetchInvoices()
       return res.data
     },
