@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen flex">
+  <div class="min-h-screen flex bg-gray-100 dark:bg-gray-900 transition-colors">
     <!-- Sidebar -->
-    <aside class="w-64 bg-gray-900 text-white flex flex-col">
+    <aside class="w-64 bg-gray-900 dark:bg-gray-950 text-white flex flex-col shadow-xl">
       <div class="p-6 border-b border-gray-700">
-        <h1 class="text-xl font-bold">PMS</h1>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PMS</h1>
         <p class="text-gray-400 text-sm">Property Management</p>
       </div>
 
@@ -12,15 +12,30 @@
           v-for="item in filteredNav"
           :key="item.path"
           :to="item.path"
-          class="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition"
-          active-class="bg-indigo-600 text-white"
+          class="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
+          active-class="!bg-indigo-600 !text-white shadow-lg shadow-indigo-500/20"
         >
           <span class="text-lg mr-3">{{ item.icon }}</span>
-          <span>{{ item.label }}</span>
+          <span class="font-medium">{{ item.label }}</span>
         </router-link>
       </nav>
 
-      <div class="p-4 border-t border-gray-700">
+      <div class="p-4 border-t border-gray-700 space-y-3">
+        <!-- WebSocket Status -->
+        <div class="flex items-center gap-2 text-xs text-gray-400">
+          <span :class="['w-2 h-2 rounded-full', wsConnected ? 'bg-green-400' : 'bg-red-400']"></span>
+          {{ wsConnected ? 'Live' : 'Offline' }}
+        </div>
+
+        <!-- Dark Mode Toggle -->
+        <button
+          @click="toggleDarkMode"
+          class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm transition"
+        >
+          <span>{{ isDark ? '☀️ Light' : '🌙 Dark' }}</span>
+        </button>
+
+        <!-- User Info -->
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium">{{ auth.user?.fullName }}</p>
@@ -28,7 +43,7 @@
           </div>
           <button
             @click="handleLogout"
-            class="text-gray-400 hover:text-red-400 text-sm"
+            class="text-gray-400 hover:text-red-400 text-sm transition"
           >
             Logout
           </button>
@@ -37,8 +52,8 @@
     </aside>
 
     <!-- Main content -->
-    <main class="flex-1 bg-gray-100 overflow-auto">
-      <div class="p-8">
+    <main class="flex-1 overflow-auto">
+      <div class="p-6 lg:p-8">
         <router-view />
       </div>
     </main>
@@ -46,12 +61,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useWebSocket } from '../composables/useWebSocket'
+import { useDarkMode } from '../composables/useDarkMode'
+import { useToast } from 'vue-toastification'
 
 const auth = useAuthStore()
 const router = useRouter()
+const toast = useToast()
+const { isDark, toggleDarkMode } = useDarkMode()
+const { connected: wsConnected, connect, subscribe } = useWebSocket()
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'FRONT_DESK', 'RESTAURANT_STAFF'] },
@@ -70,4 +91,20 @@ function handleLogout() {
   auth.logout()
   router.push('/login')
 }
+
+onMounted(() => {
+  connect()
+
+  subscribe('/topic/rooms', (data) => {
+    toast.info(`Room ${data.roomNumber} → ${data.status}`)
+  })
+
+  subscribe('/topic/orders', (data) => {
+    toast.success(`New POS Order: ${data.orderNumber}`)
+  })
+
+  subscribe('/topic/bookings', (data) => {
+    toast.info(`Booking ${data.bookingNumber} → ${data.status}`)
+  })
+})
 </script>

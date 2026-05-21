@@ -30,6 +30,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final GuestRepository guestRepository;
+    private final WebSocketNotificationService wsNotificationService;
 
     public List<BookingDTO> getAllBookings() {
         return bookingRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
@@ -93,7 +94,11 @@ public class BookingService {
         booking.setActualCheckIn(LocalDateTime.now());
         booking.getRoom().setStatus("OCCUPIED");
         roomRepository.save(booking.getRoom());
-        return toDTO(bookingRepository.save(booking));
+        BookingDTO result = toDTO(bookingRepository.save(booking));
+        wsNotificationService.notifyRoomStatusChange(booking.getRoom().getId(), booking.getRoom().getRoomNumber(), "OCCUPIED");
+        wsNotificationService.notifyBookingUpdate(booking.getId(), booking.getBookingNumber(), "CHECKED_IN");
+        wsNotificationService.notifyDashboardUpdate();
+        return result;
     }
 
     @Transactional
@@ -106,7 +111,11 @@ public class BookingService {
         booking.setActualCheckOut(LocalDateTime.now());
         booking.getRoom().setStatus("CLEANING");
         roomRepository.save(booking.getRoom());
-        return toDTO(bookingRepository.save(booking));
+        BookingDTO result = toDTO(bookingRepository.save(booking));
+        wsNotificationService.notifyRoomStatusChange(booking.getRoom().getId(), booking.getRoom().getRoomNumber(), "CLEANING");
+        wsNotificationService.notifyBookingUpdate(booking.getId(), booking.getBookingNumber(), "CHECKED_OUT");
+        wsNotificationService.notifyDashboardUpdate();
+        return result;
     }
 
     @Transactional

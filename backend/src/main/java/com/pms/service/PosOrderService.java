@@ -27,6 +27,7 @@ public class PosOrderService {
     private final BookingRepository bookingRepository;
     private final MenuItemRepository menuItemRepository;
     private final InventoryRepository inventoryRepository;
+    private final WebSocketNotificationService wsNotificationService;
 
     public List<PosOrderDTO> getAllOrders() {
         return posOrderRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
@@ -99,7 +100,10 @@ public class PosOrderService {
         }
 
         order.setTotalAmount(total);
-        return toDTO(posOrderRepository.save(order));
+        PosOrderDTO result = toDTO(posOrderRepository.save(order));
+        wsNotificationService.notifyNewOrder(order.getId(), order.getOrderNumber(), order.getOrderType());
+        wsNotificationService.notifyDashboardUpdate();
+        return result;
     }
 
     @Transactional
