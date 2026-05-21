@@ -12,7 +12,7 @@ import com.pms.service.PdfInvoiceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,15 +35,15 @@ class BillingControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private InvoiceService invoiceService;
-    @MockBean
+    @MockitoBean
     private PaymentService paymentService;
-    @MockBean
+    @MockitoBean
     private PdfInvoiceService pdfInvoiceService;
-    @MockBean
+    @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
-    @MockBean
+    @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
 
     private InvoiceDTO sampleInvoice() {
@@ -163,7 +163,7 @@ class BillingControllerTest {
     @Test
     @WithMockUser(roles = "FRONT_DESK")
     void downloadPdf_returns200WithPdf() throws Exception {
-        when(pdfInvoiceService.generatePdf(1L)).thenReturn(new byte[] { 1, 2, 3 });
+        when(pdfInvoiceService.generateInvoicePdf(1L)).thenReturn(new byte[] { 1, 2, 3 });
 
         mockMvc.perform(get("/api/billing/invoices/1/pdf"))
                 .andExpect(status().isOk())
