@@ -58,7 +58,8 @@ class BookingServiceTest {
         hotelStrategy = new HotelStrategy();
         guest = Guest.builder().id(1L).firstName("John").lastName("Doe").build();
         roomType = RoomType.builder().id(1L).name("Deluxe").basePrice(new BigDecimal("3000")).build();
-        room = Room.builder().id(1L).roomNumber("101").roomType(roomType).floor(1).status("AVAILABLE").build();
+        room = Room.builder().id(1L).roomNumber("101").roomType(roomType).floor(1).status("AVAILABLE").capacity(1)
+                .occupiedCount(0).build();
         booking = Booking.builder()
                 .id(1L)
                 .bookingNumber("BK-TEST0001")
@@ -68,6 +69,7 @@ class BookingServiceTest {
                 .checkOutDate(LocalDate.now().plusDays(3))
                 .numGuests(2)
                 .status("RESERVED")
+                .propertyType(PropertyType.HOTEL)
                 .totalAmount(new BigDecimal("9000"))
                 .build();
     }
