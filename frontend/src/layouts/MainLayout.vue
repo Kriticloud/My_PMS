@@ -5,6 +5,16 @@
       <div class="p-6 border-b border-gray-700">
         <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PMS</h1>
         <p class="text-gray-400 text-sm">Property Management</p>
+        <!-- Active Property Badge -->
+        <router-link
+          v-if="propertyStore.activeProperty"
+          to="/properties"
+          class="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition text-sm"
+        >
+          <span>{{ typeIcons[propertyStore.activeProperty.propertyType] }}</span>
+          <span class="text-gray-200 truncate">{{ propertyStore.activeProperty.name }}</span>
+          <span class="ml-auto text-gray-500 text-xs">Switch</span>
+        </router-link>
       </div>
 
       <nav class="flex-1 p-4 space-y-1">
@@ -64,15 +74,25 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { usePropertyStore } from '../stores/property'
 import { useWebSocket } from '../composables/useWebSocket'
 import { useDarkMode } from '../composables/useDarkMode'
 import { useToast } from 'vue-toastification'
 
 const auth = useAuthStore()
+const propertyStore = usePropertyStore()
 const router = useRouter()
 const toast = useToast()
 const { isDark, toggleDarkMode } = useDarkMode()
 const { connected: wsConnected, connect, subscribe } = useWebSocket()
+
+const typeIcons = {
+  HOTEL: '🏨',
+  HOSTEL: '🛏️',
+  HOSPITAL: '🏥',
+  RENTAL: '🏠',
+  RESORT: '🏖️',
+}
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'FRONT_DESK', 'RESTAURANT_STAFF'] },
@@ -93,6 +113,8 @@ function handleLogout() {
 }
 
 onMounted(() => {
+  propertyStore.loadActiveProperty()
+  propertyStore.fetchProperties()
   connect()
 
   subscribe('/topic/rooms', (data) => {

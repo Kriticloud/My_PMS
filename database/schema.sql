@@ -110,13 +110,21 @@ CREATE TABLE booking (
     booking_number VARCHAR(20) NOT NULL UNIQUE,
     guest_id BIGINT NOT NULL REFERENCES guest(id),
     room_id BIGINT NOT NULL REFERENCES room(id),
+    property_id BIGINT REFERENCES property(id),
+    property_type VARCHAR(20),
     check_in_date DATE NOT NULL,
     check_out_date DATE NOT NULL,
     actual_check_in TIMESTAMP,
     actual_check_out TIMESTAMP,
     num_guests INT NOT NULL DEFAULT 1,
-    status VARCHAR(20) NOT NULL DEFAULT 'RESERVED'
-        CHECK (status IN ('RESERVED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED')),
+    status VARCHAR(30) NOT NULL DEFAULT 'BOOKED'
+        CHECK (status IN (
+            'BOOKED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED',
+            'ACTIVE', 'VACATED',
+            'ADMITTED', 'UNDER_TREATMENT', 'DISCHARGED',
+            'LEASE_CREATED', 'TERMINATED',
+            'RESERVED'
+        )),
     special_requests TEXT,
     total_amount NUMERIC(12, 2) DEFAULT 0,
     created_by BIGINT REFERENCES app_user(id),
@@ -240,4 +248,7 @@ CREATE INDEX idx_pos_order_item_order ON pos_order_item(order_id);
 CREATE INDEX idx_invoice_booking ON invoice(booking_id);
 CREATE INDEX idx_payment_invoice ON payment(invoice_id);
 CREATE INDEX idx_room_status ON room(status);
+CREATE INDEX idx_room_property ON room(property_id);
+CREATE INDEX idx_booking_property ON booking(property_id);
+CREATE INDEX idx_booking_property_type ON booking(property_type);
 CREATE INDEX idx_menu_item_category ON menu_item(category_id);

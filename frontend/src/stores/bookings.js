@@ -40,6 +40,12 @@ export const useBookingStore = defineStore('bookings', () => {
     return res.data
   }
 
+  async function transitionStatus(id, targetStatus) {
+    const res = await api.post(`/bookings/${id}/transition?targetStatus=${encodeURIComponent(targetStatus)}`)
+    updateLocal(id, res.data)
+    return res.data
+  }
+
   async function getBookingsByGuest(guestId) {
     const res = await api.get(`/bookings/guest/${guestId}`)
     return res.data
@@ -50,5 +56,5 @@ export const useBookingStore = defineStore('bookings', () => {
     if (idx !== -1) bookings.value[idx] = data
   }
 
-  return { bookings, loading, fetchBookings, createBooking, checkIn, checkOut, cancelBooking, getBookingsByGuest }
+  return { bookings, loading, fetchBookings, createBooking, checkIn, checkOut, cancelBooking, transitionStatus, getBookingsByGuest }
 })

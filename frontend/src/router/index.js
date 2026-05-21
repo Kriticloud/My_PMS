@@ -9,6 +9,11 @@ const routes = [
     meta: { public: true },
   },
   {
+    path: '/properties',
+    name: 'PropertySelector',
+    component: () => import('../views/PropertySelector.vue'),
+  },
+  {
     path: '/',
     component: () => import('../layouts/MainLayout.vue'),
     children: [

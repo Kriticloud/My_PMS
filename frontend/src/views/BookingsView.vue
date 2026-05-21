@@ -18,9 +18,9 @@
       :darkMode="isDark"
     >
       <template #toolbar>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <button
-            v-for="s in ['ALL', 'RESERVED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']"
+            v-for="s in statusFilters"
             :key="s"
             @click="statusFilter = s"
             :class="['px-3 py-1.5 rounded text-xs font-medium transition',

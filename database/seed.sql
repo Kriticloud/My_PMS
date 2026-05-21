@@ -14,24 +14,28 @@ INSERT INTO app_user (username, password, full_name, email, role_id) VALUES
 ('frontdesk1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'John Doe', 'john@pms.com', 2),
 ('waiter1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Jane Smith', 'jane@pms.com', 3);
 
--- 3. Room Types
+-- 3. Properties
+INSERT INTO property (name, property_type, address, contact_phone, contact_email) VALUES
+('Grand Hotel', 'HOTEL', '123 Main Street', '+1-555-0100', 'info@grandhotel.com');
+
+-- 4. Room Types
 INSERT INTO room_type (name, description, base_price, max_occupancy) VALUES
 ('Standard', 'Standard room with basic amenities', 2500.00, 2),
 ('Deluxe', 'Deluxe room with premium amenities and city view', 4500.00, 3),
 ('Suite', 'Luxury suite with living area and premium services', 8000.00, 4);
 
--- 4. Rooms
-INSERT INTO room (room_number, room_type_id, floor, status) VALUES
-('101', 1, 1, 'AVAILABLE'),
-('102', 1, 1, 'AVAILABLE'),
-('103', 1, 1, 'AVAILABLE'),
-('104', 2, 1, 'AVAILABLE'),
-('201', 1, 2, 'AVAILABLE'),
-('202', 2, 2, 'AVAILABLE'),
-('203', 2, 2, 'AVAILABLE'),
-('204', 3, 2, 'AVAILABLE'),
-('301', 2, 3, 'AVAILABLE'),
-('302', 3, 3, 'AVAILABLE');
+-- 5. Rooms (linked to Grand Hotel property)
+INSERT INTO room (room_number, room_type_id, property_id, floor, status) VALUES
+('101', 1, 1, 1, 'AVAILABLE'),
+('102', 1, 1, 1, 'AVAILABLE'),
+('103', 1, 1, 1, 'AVAILABLE'),
+('104', 2, 1, 1, 'AVAILABLE'),
+('201', 1, 1, 2, 'AVAILABLE'),
+('202', 2, 1, 2, 'AVAILABLE'),
+('203', 2, 1, 2, 'AVAILABLE'),
+('204', 3, 1, 2, 'AVAILABLE'),
+('301', 2, 1, 3, 'AVAILABLE'),
+('302', 3, 1, 3, 'AVAILABLE');
 
 -- 5. Menu Categories
 INSERT INTO menu_category (name, description) VALUES
