@@ -78,6 +78,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useBookingStore } from '../stores/bookings'
 import { useRoomStore } from '../stores/rooms'
+import { usePropertyStore } from '../stores/property'
 import { useDarkMode } from '../composables/useDarkMode'
 import { useToast } from 'vue-toastification'
 import DataGrid from '../components/DataGrid.vue'
@@ -86,11 +87,21 @@ import api from '../api'
 
 const bookingStore = useBookingStore()
 const roomStore = useRoomStore()
+const propertyStore = usePropertyStore()
 const toast = useToast()
 const { isDark } = useDarkMode()
 const statusFilter = ref('ALL')
 const showModal = ref(false)
 const guests = ref([])
+
+// Dynamic status filters based on property type
+const statusFilters = computed(() => {
+  const prop = propertyStore.activeProperty
+  if (prop && prop.validStatuses) {
+    return ['ALL', ...prop.validStatuses, 'CANCELLED']
+  }
+  return ['ALL', 'RESERVED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']
+})
 
 const filteredBookings = computed(() => {
   if (statusFilter.value === 'ALL') return bookingStore.bookings
