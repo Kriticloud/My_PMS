@@ -13,6 +13,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -23,8 +27,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(RoomController.class)
 class RoomControllerTest {
 
@@ -90,7 +98,7 @@ class RoomControllerTest {
         dto.setId(null);
         when(roomService.createRoom(any(RoomDTO.class))).thenReturn(sampleRoom());
 
-        mockMvc.perform(post("/api/rooms")
+        mockMvc.perform(post("/api/rooms").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -105,7 +113,7 @@ class RoomControllerTest {
         dto.setFloor(1);
         // roomNumber missing (blank)
 
-        mockMvc.perform(post("/api/rooms")
+        mockMvc.perform(post("/api/rooms").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -118,7 +126,7 @@ class RoomControllerTest {
         updated.setStatus("MAINTENANCE");
         when(roomService.updateRoomStatus(eq(1L), eq("MAINTENANCE"))).thenReturn(updated);
 
-        mockMvc.perform(patch("/api/rooms/1/status")
+        mockMvc.perform(patch("/api/rooms/1/status").with(csrf())
                 .param("status", "MAINTENANCE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("MAINTENANCE"));
@@ -129,7 +137,7 @@ class RoomControllerTest {
     void deleteRoom_returns204() throws Exception {
         doNothing().when(roomService).deleteRoom(1L);
 
-        mockMvc.perform(delete("/api/rooms/1"))
+        mockMvc.perform(delete("/api/rooms/1").with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -161,7 +169,7 @@ class RoomControllerTest {
     @WithMockUser(roles = "FRONT_DESK")
     void createRoom_frontDeskForbidden() throws Exception {
         RoomDTO dto = sampleRoom();
-        mockMvc.perform(post("/api/rooms")
+        mockMvc.perform(post("/api/rooms").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isForbidden());

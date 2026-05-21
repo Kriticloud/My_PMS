@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -58,6 +59,7 @@ class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
             p.setId(1L);
+            p.setPaidAt(LocalDateTime.now());
             return p;
         });
 
@@ -79,6 +81,7 @@ class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
             p.setId(1L);
+            p.setPaidAt(LocalDateTime.now());
             return p;
         });
 
@@ -132,6 +135,7 @@ class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
             p.setId(1L);
+            p.setPaidAt(LocalDateTime.now());
             return p;
         });
 
@@ -149,6 +153,7 @@ class PaymentServiceTest {
                 .amount(new BigDecimal("5000"))
                 .paymentMode("CASH")
                 .status("COMPLETED")
+                .paidAt(LocalDateTime.now())
                 .build();
 
         when(paymentRepository.findByInvoiceId(1L)).thenReturn(List.of(payment));

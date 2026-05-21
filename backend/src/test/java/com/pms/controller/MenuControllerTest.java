@@ -12,6 +12,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -21,8 +25,12 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(MenuController.class)
 class MenuControllerTest {
 
@@ -79,7 +87,7 @@ class MenuControllerTest {
         dto.setId(null);
         when(menuService.createMenuItem(any(MenuItemDTO.class))).thenReturn(sampleItem());
 
-        mockMvc.perform(post("/api/menu/items")
+        mockMvc.perform(post("/api/menu/items").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -93,7 +101,7 @@ class MenuControllerTest {
         dto.setCategoryId(1L);
         dto.setPrice(new BigDecimal("100"));
 
-        mockMvc.perform(post("/api/menu/items")
+        mockMvc.perform(post("/api/menu/items").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -103,7 +111,7 @@ class MenuControllerTest {
     @WithMockUser(roles = "RESTAURANT_STAFF")
     void createMenuItem_forbiddenForStaff() throws Exception {
         MenuItemDTO dto = sampleItem();
-        mockMvc.perform(post("/api/menu/items")
+        mockMvc.perform(post("/api/menu/items").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isForbidden());
@@ -125,7 +133,7 @@ class MenuControllerTest {
         MenuItemDTO dto = sampleItem();
         when(menuService.updateMenuItem(eq(1L), any(MenuItemDTO.class))).thenReturn(dto);
 
-        mockMvc.perform(put("/api/menu/items/1")
+        mockMvc.perform(put("/api/menu/items/1").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())

@@ -12,6 +12,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -22,8 +26,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(PosOrderController.class)
 class PosOrderControllerTest {
 
@@ -75,7 +83,7 @@ class PosOrderControllerTest {
         dto.setId(null);
         when(posOrderService.createOrder(any(PosOrderDTO.class))).thenReturn(sampleOrder());
 
-        mockMvc.perform(post("/api/pos/orders")
+        mockMvc.perform(post("/api/pos/orders").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -92,7 +100,7 @@ class PosOrderControllerTest {
         dto.setItems(List.of(item));
         // orderType is null
 
-        mockMvc.perform(post("/api/pos/orders")
+        mockMvc.perform(post("/api/pos/orders").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -105,7 +113,7 @@ class PosOrderControllerTest {
         dto.setOrderType("DINE_IN");
         dto.setItems(List.of());
 
-        mockMvc.perform(post("/api/pos/orders")
+        mockMvc.perform(post("/api/pos/orders").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -118,7 +126,7 @@ class PosOrderControllerTest {
         dto.setStatus("COMPLETED");
         when(posOrderService.updateOrderStatus(eq(1L), eq("COMPLETED"))).thenReturn(dto);
 
-        mockMvc.perform(patch("/api/pos/orders/1/status")
+        mockMvc.perform(patch("/api/pos/orders/1/status").with(csrf())
                 .param("status", "COMPLETED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));

@@ -13,6 +13,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -23,8 +27,12 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(BookingController.class)
 class BookingControllerTest {
 
@@ -75,7 +83,7 @@ class BookingControllerTest {
         dto.setId(null);
         when(bookingService.createBooking(any(BookingDTO.class))).thenReturn(sampleBooking());
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/bookings").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -91,7 +99,7 @@ class BookingControllerTest {
         dto.setCheckOutDate(LocalDate.now().plusDays(4));
         // guestId is null
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/bookings").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -103,7 +111,7 @@ class BookingControllerTest {
         BookingDTO dto = sampleBooking();
         when(bookingService.createBooking(any())).thenThrow(new BadRequestException("Room is not available"));
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/bookings").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -116,7 +124,7 @@ class BookingControllerTest {
         dto.setStatus("CHECKED_IN");
         when(bookingService.checkIn(1L)).thenReturn(dto);
 
-        mockMvc.perform(post("/api/bookings/1/check-in"))
+        mockMvc.perform(post("/api/bookings/1/check-in").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CHECKED_IN"));
     }
@@ -126,7 +134,7 @@ class BookingControllerTest {
     void checkIn_notReserved_returns400() throws Exception {
         when(bookingService.checkIn(1L)).thenThrow(new BadRequestException("Only RESERVED bookings"));
 
-        mockMvc.perform(post("/api/bookings/1/check-in"))
+        mockMvc.perform(post("/api/bookings/1/check-in").with(csrf()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -137,7 +145,7 @@ class BookingControllerTest {
         dto.setStatus("CHECKED_OUT");
         when(bookingService.checkOut(1L)).thenReturn(dto);
 
-        mockMvc.perform(post("/api/bookings/1/check-out"))
+        mockMvc.perform(post("/api/bookings/1/check-out").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CHECKED_OUT"));
     }
@@ -149,7 +157,7 @@ class BookingControllerTest {
         dto.setStatus("CANCELLED");
         when(bookingService.cancelBooking(1L)).thenReturn(dto);
 
-        mockMvc.perform(post("/api/bookings/1/cancel"))
+        mockMvc.perform(post("/api/bookings/1/cancel").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }

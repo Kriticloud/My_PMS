@@ -12,6 +12,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -20,8 +24,12 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(GuestController.class)
 class GuestControllerTest {
 
@@ -65,7 +73,7 @@ class GuestControllerTest {
         dto.setId(null);
         when(guestService.createGuest(any(GuestDTO.class))).thenReturn(sampleGuest());
 
-        mockMvc.perform(post("/api/guests")
+        mockMvc.perform(post("/api/guests").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -78,7 +86,7 @@ class GuestControllerTest {
         GuestDTO dto = new GuestDTO();
         dto.setLastName("Doe");
 
-        mockMvc.perform(post("/api/guests")
+        mockMvc.perform(post("/api/guests").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -99,14 +107,14 @@ class GuestControllerTest {
     void deleteGuest_returns204() throws Exception {
         doNothing().when(guestService).deleteGuest(1L);
 
-        mockMvc.perform(delete("/api/guests/1"))
+        mockMvc.perform(delete("/api/guests/1").with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @WithMockUser(roles = "FRONT_DESK")
     void deleteGuest_frontDeskForbidden() throws Exception {
-        mockMvc.perform(delete("/api/guests/1"))
+        mockMvc.perform(delete("/api/guests/1").with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -125,7 +133,7 @@ class GuestControllerTest {
         GuestDTO dto = sampleGuest();
         when(guestService.updateGuest(eq(1L), any(GuestDTO.class))).thenReturn(dto);
 
-        mockMvc.perform(put("/api/guests/1")
+        mockMvc.perform(put("/api/guests/1").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())

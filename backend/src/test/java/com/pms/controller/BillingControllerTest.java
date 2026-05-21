@@ -15,6 +15,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
+import org.springframework.context.annotation.Import;
+import com.pms.config.TestSecurityConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -25,8 +29,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(BillingController.class)
 class BillingControllerTest {
 
@@ -85,7 +93,7 @@ class BillingControllerTest {
     void generateInvoice_returns201() throws Exception {
         when(invoiceService.generateInvoice(eq(1L), any())).thenReturn(sampleInvoice());
 
-        mockMvc.perform(post("/api/billing/invoices/generate/1"))
+        mockMvc.perform(post("/api/billing/invoices/generate/1").with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.totalAmount").value(10620));
     }
@@ -95,7 +103,7 @@ class BillingControllerTest {
     void generateInvoice_withDiscount_returns201() throws Exception {
         when(invoiceService.generateInvoice(eq(1L), any())).thenReturn(sampleInvoice());
 
-        mockMvc.perform(post("/api/billing/invoices/generate/1")
+        mockMvc.perform(post("/api/billing/invoices/generate/1").with(csrf())
                 .param("discount", "10"))
                 .andExpect(status().isCreated());
     }
@@ -117,7 +125,7 @@ class BillingControllerTest {
 
         when(paymentService.processPayment(any(PaymentDTO.class))).thenReturn(result);
 
-        mockMvc.perform(post("/api/billing/payments")
+        mockMvc.perform(post("/api/billing/payments").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(payment)))
                 .andExpect(status().isOk())
@@ -132,7 +140,7 @@ class BillingControllerTest {
         payment.setPaymentMode("CASH");
         // amount is null
 
-        mockMvc.perform(post("/api/billing/payments")
+        mockMvc.perform(post("/api/billing/payments").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(payment)))
                 .andExpect(status().isBadRequest());
@@ -153,7 +161,7 @@ class BillingControllerTest {
 
         when(paymentService.processSplitPayment(any())).thenReturn(List.of(p1, p2));
 
-        mockMvc.perform(post("/api/billing/payments/split")
+        mockMvc.perform(post("/api/billing/payments/split").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(List.of(p1, p2))))
                 .andExpect(status().isOk())
