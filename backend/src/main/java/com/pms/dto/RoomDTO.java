@@ -24,4 +24,12 @@ public class RoomDTO {
     private Integer floor;
 
     private String status;
+
+    private Long propertyId;
+    private String propertyName;
+    private String propertyType;
+    private Integer capacity;
+    private Integer occupiedCount;
+    private String wardName;
+    private String unitLabel;
 }

@@ -24,8 +24,24 @@ public class Room {
     @JoinColumn(name = "room_type_id", nullable = false)
     private RoomType roomType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "property_id")
+    private Property property;
+
     @Column(nullable = false)
     private Integer floor = 1;
+
+    @Column(nullable = false)
+    private Integer capacity = 1;
+
+    @Column(name = "occupied_count")
+    private Integer occupiedCount = 0;
+
+    @Column(name = "ward_name", length = 50)
+    private String wardName;
+
+    @Column(name = "unit_label", length = 50)
+    private String unitLabel;
 
     @Column(nullable = false, length = 20)
     private String status = "AVAILABLE";

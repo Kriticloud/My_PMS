@@ -24,6 +24,10 @@ public class BookingDTO {
     private String roomNumber;
     private String roomTypeName;
 
+    private Long propertyId;
+    private String propertyName;
+    private String propertyType;
+
     @NotNull(message = "Check-in date is required")
     private LocalDate checkInDate;
 
